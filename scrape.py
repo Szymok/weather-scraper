@@ -103,4 +103,55 @@ def scrape_weather(jsonify=False):
 			if index == 2:
 				continue
 
-	rest_info.append([event, issued_time, country, areas, regions, datetime.today().strftime('%Y-%m-%d %H:%M')])
+		rest_info.append([event, issued_time, country, areas, regions, datetime.today().strftime('%Y-%m-%d %H:%M')])
+
+	df = pd.DataFrame(rest_info, columns=['Event_type', 'Issued_time', 'Country', 'Areas', 'Regions', 'Date'])
+	df['Issued_time'] = df['Issued_time'].apply(lambda x: x.split('#')[0]) 
+	df['coordinates'] = df['Areas'] + ', ' + df['Country']
+	df['geo_location'] = df['coordinates'].apply(get_location_coordinates)
+
+	if jsonify:
+		result = df.to_json(orient='split')
+		parsed = json.loads(result)
+		return json.dumps(parsed)
+	else:
+		df.to_csv('scraped_weather.csv', mode='a', index=False, header=False)
+
+
+def scrape_pirates(jsonify=False):
+	URL = 'https://www.icc-ccs.org/index.php/piracy-reporting-centre/live-piracy-report'
+	rest_info = []
+	r = requests.get(URL)
+	soup = BeautifulSoup(r.content, 'html.parser')
+	all = soup[.find('tbody')
+	row = all.findAll('tr')
+	for i in row:
+		infos_row = i.findAll('td')
+		for index, j in enumerate(infos_row):
+			if index == 0:
+				attack_number =  j.text.replace('\n','').replace('\t','').replace('\r','')
+			if index == 1:
+				narrations = j.text.replace('\n','').replace('\t','').replace('\r','')
+			if index ==2:
+				date_of_incident = j.text.replace('\n','').replace('\t','').replace('\r','')
+			if index >2:
+					continue
+		try: 
+			rest_info.append([attack_number,narrations,date_of_incident,datetime.today().strftime('%Y-%m-%d %H:%M')])
+		except:
+			continue
+
+	df_pirates = pd.DataFrame(rest_info, columns = ['attack_nr', 'text', 'date_of_incident', 'scrape_date'])
+	df_pirates['text'] = df_pirates['text'].apply(lambda x: x.split('Posn: ')[1])
+	df_pirates['location'] = df_pirates['location'].apply(get_location_coordinates)
+	df_pirates['geo_location'] = df_pirates['location'].apply(get_location_coordinates)
+
+	if jsonify:
+		result = df_pirates.to_json(orient='split')
+		parsed = json.loads(result)
+		return json.dumps(parsed)
+	else:
+		df_pirates.to_csv('scraped_pirates.csv', mode='a',  index=False, header=False)
+
+scrape_weather()
+scrape_pirates()
