@@ -20,6 +20,7 @@ import requests
 import json
 
 from pyvirtualdisplay import Display
+
 display = Display(visibla=0, size=(800, 800))
 display.start()
 
@@ -123,7 +124,7 @@ def scrape_pirates(jsonify=False):
 	rest_info = []
 	r = requests.get(URL)
 	soup = BeautifulSoup(r.content, 'html.parser')
-	all = soup[.find('tbody')
+	all = soup.find('tbody')
 	row = all.findAll('tr')
 	for i in row:
 		infos_row = i.findAll('td')
